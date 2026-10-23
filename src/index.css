@@ -2,7 +2,7 @@
 
 @layer base {
   :root {
-    font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+    font-family: 'Plus Jakarta Sans', 'IBM Plex Sans Arabic', -apple-system, BlinkMacSystemFont, sans-serif;
     color-scheme: dark;
   }
 
@@ -19,8 +19,12 @@
   }
 }
 
+[dir="rtl"] {
+  font-family: 'IBM Plex Sans Arabic', 'Plus Jakarta Sans', sans-serif;
+}
+
 .font-mono-tabular {
-  font-family: 'JetBrains Mono', monospace;
+  font-family: 'JetBrains Mono', 'IBM Plex Sans Arabic', monospace;
   font-variant-numeric: tabular-nums;
 }
 

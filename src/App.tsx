@@ -3,33 +3,40 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
+  ArrowUpLeft,
   ArrowUpRight,
   Check,
   Code2,
   Copy,
   Download,
+  ImagePlus,
   Menu,
   Plus,
+  RotateCcw,
+  Upload,
   X,
 } from 'lucide-react';
 import { STANDALONE_HTML } from './standaloneHtml';
 
+type Language = 'en' | 'ar';
+type ImageSlotKey = 'profile' | 'hero' | 'work1' | 'work2' | 'work3';
+
 interface CurriculumModule {
   id: string;
-  title: string;
-  description: string;
+  title: { en: string; ar: string };
+  description: { en: string; ar: string };
 }
 
 interface StudentWorkItem {
   id: string;
   index: string;
   src: string;
-  fallbackKey: 'work1' | 'work2' | 'work3';
+  slotKey: 'work1' | 'work2' | 'work3';
   alt: string;
-  title: string;
-  subtitle: string;
+  title: { en: string; ar: string };
+  subtitle: { en: string; ar: string };
   stack: string;
   year: string;
 }
@@ -37,27 +44,47 @@ interface StudentWorkItem {
 const CURRICULUM_MODULES: CurriculumModule[] = [
   {
     id: 'module-01',
-    title: 'Module 01: BIM Fundamentals & Project Setup',
-    description:
-      'Interface mastery, templates, levels, grids, and architectural workflow.',
+    title: {
+      en: 'Module 01: BIM Fundamentals & Project Setup',
+      ar: 'الوحدة 01: أساسيات الـ BIM وإعداد المشروع',
+    },
+    description: {
+      en: 'Interface mastery, templates, levels, grids, and architectural workflow.',
+      ar: 'إتقان واجهة البرنامج، القوالب الاحترافية، المناسيب، المحاور، وسير العمل المعماري الصحيح.',
+    },
   },
   {
     id: 'module-02',
-    title: 'Module 02: Advanced 3D Modeling & Massing',
-    description:
-      'Complex walls, curtain systems, vertical circulation, roofs, and custom parametric families.',
+    title: {
+      en: 'Module 02: Advanced 3D Modeling & Massing',
+      ar: 'الوحدة 02: النمذجة ثلاثية الأبعاد المتقدمة والكتل',
+    },
+    description: {
+      en: 'Complex walls, curtain systems, vertical circulation, roofs, and custom parametric families.',
+      ar: 'الجدران المعقدة، الواجهات الزجاجية (Curtain Systems)، عناصر الحركة الرأسية، الأسقف، والعائلات البارامترية المخصصة.',
+    },
   },
   {
     id: 'module-03',
-    title: 'Module 03: Technical Documentation & Execution',
-    description:
-      'Detailed floor plans, sections, elevations, quantity schedules, and professional sheet layouts.',
+    title: {
+      en: 'Module 03: Technical Documentation & Execution',
+      ar: 'الوحدة 03: التوثيق التقني والمخططات التنفيذية',
+    },
+    description: {
+      en: 'Detailed floor plans, sections, elevations, quantity schedules, and professional sheet layouts.',
+      ar: 'المساقط الأفقية التفصيلية، المقاطع، الواجهات، جداول حصر الكميات، وإخراج اللوحات الاحترافية.',
+    },
   },
   {
     id: 'module-04',
-    title: 'Module 04: Visualization Bridge & Export',
-    description:
-      'Preparing and exporting models seamlessly to Lumion, Enscape, and V-Ray for realistic lighting and rendering.',
+    title: {
+      en: 'Module 04: Visualization Bridge & Export',
+      ar: 'الوحدة 04: جسر الإظهار المعماري والتصدير',
+    },
+    description: {
+      en: 'Preparing and exporting models seamlessly to Lumion, Enscape, and V-Ray for realistic lighting and rendering.',
+      ar: 'تجهيز وتصدير النماذج بسلاسة إلى Lumion و Enscape و V-Ray للحصول على إضاءة وريندر واقعي.',
+    },
   },
 ];
 
@@ -70,7 +97,118 @@ const SOFTWARE_STACK = [
   'V-Ray',
 ];
 
-const FALLBACK_SVGS = {
+const UI_COPY = {
+  en: {
+    brand: 'IBRAHIM AL-NAJJAR',
+    navAbout: 'About',
+    navAcademy: 'Academy',
+    navStudentWork: 'Student work',
+    navContact: "Let's talk",
+    switchLangLabel: 'العربية',
+    heroLabel: 'ARCHITECTURAL ENGINEER & EDUCATOR',
+    heroName: 'Arch. Ibrahim Al-Najjar',
+    heroMotto: 'Thoughtful architecture. Knowledge worth sharing.',
+    heroBio:
+      'Architectural engineer and instructor with professional experience since 2023, having successfully trained over 600+ students worldwide. Specializing in transforming complex architectural concepts into high-end visual masterpieces using Revit, AutoCAD, Enscape, Lumion, Photoshop, and V-Ray.',
+    heroBadge: 'FORM / LIGHT / ATMOSPHERE',
+    practiceLabel: '01 / THE PRACTICE',
+    practiceHeading: 'Good design begins with understanding.',
+    practiceNarrative:
+      "I'm Arch. Ibrahim Al-Najjar, an architectural engineer and dedicated educator. My journey in professional architectural training started in 2023, and since then, I’ve had the privilege of teaching and empowering over 600+ students and engineers worldwide. My approach bridges the gap between creative architectural design and precise technical execution. I specialize in mastering and teaching the industry's most powerful software stack: Revit, AutoCAD, Enscape, Lumion, Photoshop, and V-Ray. My mission is to help aspiring architects transform complex concepts into stunning, realistic visual stories.",
+    stat1Value: 'Since 2023',
+    stat1Desc: 'Professional Experience & Instruction',
+    stat2Value: '600+',
+    stat2Desc: 'Students Trained Worldwide',
+    stat3Value: '6 Core Tools',
+    stat3Desc: 'Complete BIM & Rendering Ecosystem',
+    softwareEcosystemLabel: 'CORE SOFTWARE ECOSYSTEM',
+    academyLabel: '02 / THE ACADEMY',
+    academyHeading: 'Build precision. Render emotion.',
+    flagshipTag: 'FLAGSHIP ONLINE COURSE',
+    flagshipTitle: 'Revit Masterclass',
+    flagshipOverview:
+      'Complete architectural BIM mastery from initial concept and precision 3D modeling to full technical working drawings and rendering export.',
+    flagshipCta: 'Enroll in Revit Masterclass',
+    syllabusLabel: 'CURRICULUM SYLLABUS · 4 MODULES',
+    course1Tag: 'SPECIALIZED TRACK · LUMION / ENSCAPE / V-RAY',
+    course1Title: 'Architectural Visualization Bootcamp',
+    course1Desc:
+      'Mastering twilight lighting, realistic materials, and cinematic atmosphere using Lumion, Enscape, and V-Ray.',
+    course1Meta: 'Lighting · Materials · Atmosphere',
+    course2Tag: 'SPECIALIZED TRACK · AUTOCAD / PHOTOSHOP',
+    course2Title: 'Technical Drafting & Post-Production',
+    course2Desc:
+      'Precision 2D CAD documentation and studio-grade architectural post-processing in Adobe Photoshop.',
+    course2Meta: '2D Execution · Post-Processing',
+    inquireWhatsapp: 'Inquire via WhatsApp →',
+    studentWorkLabel: '03 / STUDENT WORK',
+    studentWorkHeading: 'Selected works by our 600+ students.',
+    contactLabel: "04 / LET'S TALK",
+    contactHeading: 'Ready to elevate your architectural workflow?',
+    whatsappBtnLabel: 'WhatsApp',
+    emailBtnLabel: 'Email',
+    footerCopy: '© 2026 Arch. Ibrahim Al-Najjar. All rights reserved.',
+    exportBtn: 'Export Single-File index.html',
+    manageImagesBtn: 'Upload Site Photos',
+    workflowLabel: 'Workflow',
+  },
+  ar: {
+    brand: 'إبراهيم النجار',
+    navAbout: 'عن المكتب',
+    navAcademy: 'الأكاديمية',
+    navStudentWork: 'أعمال الطلاب',
+    navContact: 'تواصل معنا',
+    switchLangLabel: 'EN',
+    heroLabel: 'مهندس معماري ومدرّب محترف',
+    heroName: 'المهندس إبراهيم النجار',
+    heroMotto: 'عمارة مدروسة. ومعرفة تستحق المشاركة.',
+    heroBio:
+      'مهندس معماري ومدرّب ذو خبرة احترافية منذ عام 2023، قام بتدريب وتأهيل أكثر من 600+ طالب ومهندس حول العالم. متخصص في تحويل الأفكار المعمارية المعقدة إلى لوحات بصرية استثنائية باستخدام Revit و AutoCAD و Enscape و Lumion و Photoshop و V-Ray.',
+    heroBadge: 'الكتلة / الضوء / الأجواء',
+    practiceLabel: '01 / الممارسة المعمارية',
+    practiceHeading: 'التصميم الجيد يبدأ من الفهم العميق.',
+    practiceNarrative:
+      'أنا المهندس المعماري إبراهيم النجار، مهندس معماري ومدرّب شغوف بنقل المعرفة. بدأت رحلتي في التدريب المعماري الاحترافي عام 2023، ومنذ ذلك الحين تشرفت بتدريب وتمكين أكثر من 600+ طالب ومهندس حول العالم. يجمع منهجي بين الإبداع في التصميم المعماري والدقة الهندسية في التنفيذ، مع التخصص في إتقان وتدريس أقوى البرمجيات الهندسية: Revit و AutoCAD و Enscape و Lumion و Photoshop و V-Ray. رسالتي هي مساعدة المعماريين الطموحين على تحويل مفاهيمهم المعقدة إلى قصص بصرية واقعية ومؤثرة.',
+    stat1Value: 'منذ 2023',
+    stat1Desc: 'خبرة احترافية وتدريب معماري',
+    stat2Value: '+600',
+    stat2Desc: 'طالب ومهندس تم تدريبهم حول العالم',
+    stat3Value: '6 برامج أساسية',
+    stat3Desc: 'منظومة متكاملة للبيم والإظهار المعماري',
+    softwareEcosystemLabel: 'منظومة البرامج الهندسية المعتمدة',
+    academyLabel: '02 / الأكاديمية',
+    academyHeading: 'ابنِ بدقة. وأظهر بروحٍ سينمائية.',
+    flagshipTag: 'الدورة التدريبية الرئيسية عن بُعد',
+    flagshipTitle: 'ماستر كلاس الريفيت المعماري (Revit Masterclass)',
+    flagshipOverview:
+      'إتقان شامل لمنظومة الـ BIM المعماري بدءاً من الفكرة الأولية والنمذجة ثلاثية الأبعاد الدقيقة وصولاً إلى المخططات التنفيذية الكاملة والتصدير لبرامج الإظهار.',
+    flagshipCta: 'سجّل الآن في ماستر كلاس الريفيت',
+    syllabusLabel: 'منهج الدورة التدريبية · 4 وحدات',
+    course1Tag: 'مسار تخصصي · LUMION / ENSCAPE / V-RAY',
+    course1Title: 'معسكر الإظهار المعماري الاحترافي',
+    course1Desc:
+      'إتقان إضاءة الغسق (Twilight)، والخامات الواقعية، والأجواء السينمائية باستخدام Lumion و Enscape و V-Ray.',
+    course1Meta: 'الإضاءة · الخامات · الأجواء البصرية',
+    course2Tag: 'مسار تخصصي · AUTOCAD / PHOTOSHOP',
+    course2Title: 'الرسم التنفيذي والمعالجة البصرية (Post-Production)',
+    course2Desc:
+      'توثيق المخططات ثنائية الأبعاد بدقة عالية في AutoCAD، والإخراج المعماري الاحترافي عبر Adobe Photoshop.',
+    course2Meta: 'التنفيذ ثنائي الأبعاد · الإخراج الفني',
+    inquireWhatsapp: 'استفسر عبر واتساب ←',
+    studentWorkLabel: '03 / أعمال الطلاب',
+    studentWorkHeading: 'أعمال مختارة من إبداع أكثر من 600+ طالب.',
+    contactLabel: '04 / لنتحدث',
+    contactHeading: 'هل أنت مستعد للارتقاء بسير عملك المعماري؟',
+    whatsappBtnLabel: 'واتساب',
+    emailBtnLabel: 'البريد الإلكتروني',
+    footerCopy: '© 2026 المهندس المعماري إبراهيم النجار. جميع الحقوق محفوظة.',
+    exportBtn: 'تصدير ملف index.html لـ GitHub Pages',
+    manageImagesBtn: 'رفع وتجربة صور الموقع',
+    workflowLabel: 'البرامج المستخدمة',
+  },
+};
+
+const FALLBACK_SVGS: Record<ImageSlotKey, string> = {
   profile:
     'data:image/svg+xml;utf8,' +
     encodeURIComponent(`
@@ -109,25 +247,19 @@ const FALLBACK_SVGS = {
           </linearGradient>
         </defs>
         <rect width="1600" height="900" fill="url(#sky)"/>
-        <!-- Subtle Architectural Grid Construction Lines -->
         <g stroke="#1F1F1F" stroke-width="1" opacity="0.65">
           <line x1="0" y1="610" x2="1600" y2="610"/>
           <line x1="240" y1="0" x2="240" y2="900"/>
           <line x1="1260" y1="0" x2="1260" y2="900"/>
           <line x1="0" y1="290" x2="1600" y2="290" stroke-dasharray="4 8"/>
         </g>
-        <!-- Upper Cantilever Volume -->
         <rect x="240" y="290" width="1020" height="52" fill="#171717" stroke="#2B2B2B" stroke-width="1.5"/>
-        <!-- Illuminated Glass Pavilion Core -->
         <rect x="310" y="342" width="820" height="178" fill="url(#warmGlass)" stroke="#333333" stroke-width="1.5"/>
-        <!-- Mullions & Structural Columns -->
         <line x1="510" y1="342" x2="510" y2="520" stroke="#1A1A1A" stroke-width="4"/>
         <line x1="760" y1="342" x2="760" y2="520" stroke="#1A1A1A" stroke-width="4"/>
         <line x1="980" y1="342" x2="980" y2="520" stroke="#1A1A1A" stroke-width="4"/>
-        <!-- Warm Linear Ceiling Light Strip -->
         <rect x="340" y="352" width="760" height="3" fill="#FFD28E" opacity="0.75"/>
         <rect x="340" y="498" width="520" height="4" fill="#F5B05B" opacity="0.65"/>
-        <!-- Brutalist Concrete Plinth & Reflection Pool -->
         <rect x="180" y="520" width="1140" height="90" fill="#121212" stroke="#242424" stroke-width="1.5"/>
         <rect x="310" y="610" width="820" height="180" fill="url(#waterReflect)"/>
       </svg>
@@ -181,10 +313,16 @@ const STUDENT_WORKS: StudentWorkItem[] = [
     id: 'work-1',
     index: '01 / REVIT + V-RAY',
     src: './work-1.jpg',
-    fallbackKey: 'work1',
+    slotKey: 'work1',
     alt: 'Student Work 01 — Monolithic Cultural Pavilion',
-    title: 'Monolithic Cultural Pavilion',
-    subtitle: 'BIM Massing · Dusk Atmospheric Study',
+    title: {
+      en: 'Monolithic Cultural Pavilion',
+      ar: 'جناح ثقافي خرساني معاصر',
+    },
+    subtitle: {
+      en: 'BIM Massing · Dusk Atmospheric Study',
+      ar: 'تشكيل الكتل BIM · دراسة أجواء الغسق',
+    },
     stack: 'Revit · V-Ray · Photoshop',
     year: '2025',
   },
@@ -192,10 +330,16 @@ const STUDENT_WORKS: StudentWorkItem[] = [
     id: 'work-2',
     index: '02 / REVIT + ENSCAPE',
     src: './work-2.jpg',
-    fallbackKey: 'work2',
+    slotKey: 'work2',
     alt: 'Student Work 02 — Cantilevered Cliffside Residence',
-    title: 'Cantilevered Cliffside Residence',
-    subtitle: 'Curtain Systems · Interior Illumination',
+    title: {
+      en: 'Cantilevered Cliffside Residence',
+      ar: 'فيلا معلّقة على الجرف الصخري',
+    },
+    subtitle: {
+      en: 'Curtain Systems · Interior Illumination',
+      ar: 'أنظمة الواجهات الزجاجية · الإضاءة الداخلية',
+    },
     stack: 'Revit · Enscape · Photoshop',
     year: '2025',
   },
@@ -203,37 +347,164 @@ const STUDENT_WORKS: StudentWorkItem[] = [
     id: 'work-3',
     index: '03 / LUMION + PHOTOSHOP',
     src: './work-3.jpg',
-    fallbackKey: 'work3',
+    slotKey: 'work3',
     alt: 'Student Work 03 — Arid Stone Courtyard Villa',
-    title: 'Arid Stone Courtyard Villa',
-    subtitle: 'Materiality · Twilight Post-Production',
+    title: {
+      en: 'Arid Stone Courtyard Villa',
+      ar: 'فيلا الفناء الحجري الصحراوي',
+    },
+    subtitle: {
+      en: 'Materiality · Twilight Post-Production',
+      ar: 'دراسة الخامات · معالجة ليلية في فوتوشوب',
+    },
     stack: 'AutoCAD · Revit · Lumion · Photoshop',
     year: '2026',
   },
 ];
 
+const IMAGE_SLOTS_META: Array<{
+  key: ImageSlotKey;
+  fileName: string;
+  labelAr: string;
+  labelEn: string;
+}> = [
+  {
+    key: 'profile',
+    fileName: './profile.jpg',
+    labelAr: 'الصورة الشخصية (96×96)',
+    labelEn: 'Profile Picture',
+  },
+  {
+    key: 'hero',
+    fileName: './hero-render.jpg',
+    labelAr: 'ريندر الواجهة الرئيسية (Hero Render)',
+    labelEn: 'Main Hero Render',
+  },
+  {
+    key: 'work1',
+    fileName: './work-1.jpg',
+    labelAr: 'عمل الطالب الأول (Work 1)',
+    labelEn: 'Student Work 01',
+  },
+  {
+    key: 'work2',
+    fileName: './work-2.jpg',
+    labelAr: 'عمل الطالب الثاني (Work 2)',
+    labelEn: 'Student Work 02',
+  },
+  {
+    key: 'work3',
+    fileName: './work-3.jpg',
+    labelAr: 'عمل الطالب الثالث (Work 3)',
+    labelEn: 'Student Work 03',
+  },
+];
+
 export default function App() {
+  const [lang, setLang] = useState<Language>('en');
   const [openModuleId, setOpenModuleId] = useState<string>('module-01');
   const [mobileMenuOpen, setMobileMenuOpen] = useState<boolean>(false);
   const [activeLightbox, setActiveLightbox] = useState<StudentWorkItem | null>(
     null
   );
   const [codeDrawerOpen, setCodeDrawerOpen] = useState<boolean>(false);
+  const [imageManagerOpen, setImageManagerOpen] = useState<boolean>(false);
   const [copied, setCopied] = useState<boolean>(false);
+  const [customImages, setCustomImages] = useState<
+    Partial<Record<ImageSlotKey, string>>
+  >(() => {
+    try {
+      const saved = localStorage.getItem('alnajjar_custom_images');
+      return saved ? JSON.parse(saved) : {};
+    } catch {
+      return {};
+    }
+  });
+
+  const t = UI_COPY[lang];
+  const isRtl = lang === 'ar';
+
+  useEffect(() => {
+    document.documentElement.lang = lang;
+    document.documentElement.dir = isRtl ? 'rtl' : 'ltr';
+  }, [lang, isRtl]);
+
+  const handleUploadSlot = (
+    key: ImageSlotKey,
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      const result = reader.result as string;
+      setCustomImages((prev) => {
+        const next = { ...prev, [key]: result };
+        try {
+          localStorage.setItem('alnajjar_custom_images', JSON.stringify(next));
+        } catch {
+          // Ignore storage quota overflow for large raw files
+        }
+        return next;
+      });
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleResetSlot = (key: ImageSlotKey) => {
+    setCustomImages((prev) => {
+      const next = { ...prev };
+      delete next[key];
+      try {
+        localStorage.setItem('alnajjar_custom_images', JSON.stringify(next));
+      } catch {
+        // Ignore
+      }
+      return next;
+    });
+  };
+
+  // Build HTML export with any uploaded custom images automatically injected if present
+  const getExportHtml = () => {
+    let html = STANDALONE_HTML;
+    if (customImages.profile) {
+      html = html.replace('src="./profile.jpg"', `src="${customImages.profile}"`);
+    }
+    if (customImages.hero) {
+      html = html.replace(
+        'src="./hero-render.jpg"',
+        `src="${customImages.hero}"`
+      );
+    }
+    if (customImages.work1) {
+      html = html.replace('src="./work-1.jpg"', `src="${customImages.work1}"`);
+    }
+    if (customImages.work2) {
+      html = html.replace('src="./work-2.jpg"', `src="${customImages.work2}"`);
+    }
+    if (customImages.work3) {
+      html = html.replace('src="./work-3.jpg"', `src="${customImages.work3}"`);
+    }
+    return html;
+  };
 
   const handleToggleModule = (id: string) => {
     setOpenModuleId((prev) => (prev === id ? '' : id));
   };
 
+  const handleToggleLanguage = () => {
+    setLang((prev) => (prev === 'en' ? 'ar' : 'en'));
+  };
+
   const handleCopyCode = async () => {
+    const exportCode = getExportHtml();
     try {
-      await navigator.clipboard.writeText(STANDALONE_HTML);
+      await navigator.clipboard.writeText(exportCode);
       setCopied(true);
       setTimeout(() => setCopied(false), 2200);
     } catch {
-      // Fallback copy via textarea
       const textarea = document.createElement('textarea');
-      textarea.value = STANDALONE_HTML;
+      textarea.value = exportCode;
       document.body.appendChild(textarea);
       textarea.select();
       document.execCommand('copy');
@@ -244,7 +515,10 @@ export default function App() {
   };
 
   const handleDownloadHtml = () => {
-    const blob = new Blob([STANDALONE_HTML], { type: 'text/html;charset=utf-8' });
+    const exportCode = getExportHtml();
+    const blob = new Blob([exportCode], {
+      type: 'text/html;charset=utf-8',
+    });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
@@ -256,16 +530,21 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0A0A0A] text-[#F5F5F5] selection:bg-[#F5F5F5] selection:text-[#0A0A0A]">
+    <div
+      dir={isRtl ? 'rtl' : 'ltr'}
+      className="min-h-screen bg-[#0A0A0A] text-[#F5F5F5] selection:bg-[#F5F5F5] selection:text-[#0A0A0A]"
+    >
       {/* TOP NAVBAR (Strict 3-Zone Architectural Contract) */}
       <header className="sticky top-0 z-40 bg-[#0A0A0A]/90 backdrop-blur-md border-b border-[#1F1F1F]">
         <div className="max-w-[1200px] mx-auto px-6 md:px-10 h-16 flex items-center justify-between gap-8">
           {/* Zone 1: Brand Wordmark */}
           <a
             href="#"
-            className="text-xs md:text-sm font-semibold tracking-[0.16em] text-[#F5F5F5] whitespace-nowrap shrink-0 hover:opacity-80 transition-opacity"
+            className={`text-xs md:text-sm font-semibold ${
+              isRtl ? 'tracking-normal' : 'tracking-[0.16em]'
+            } text-[#F5F5F5] whitespace-nowrap shrink-0 hover:opacity-80 transition-opacity`}
           >
-            IBRAHIM AL-NAJJAR
+            {t.brand}
           </a>
 
           {/* Zone 2: Navigation Links */}
@@ -277,36 +556,39 @@ export default function App() {
               href="#about"
               className="hover:text-[#F5F5F5] transition-colors duration-150 whitespace-nowrap shrink-0"
             >
-              About
+              {t.navAbout}
             </a>
             <a
               href="#academy"
               className="hover:text-[#F5F5F5] transition-colors duration-150 whitespace-nowrap shrink-0"
             >
-              Academy
+              {t.navAcademy}
             </a>
             <a
               href="#student-work"
               className="hover:text-[#F5F5F5] transition-colors duration-150 whitespace-nowrap shrink-0"
             >
-              Student work
+              {t.navStudentWork}
             </a>
             <a
               href="#contact"
               className="hover:text-[#F5F5F5] transition-colors duration-150 whitespace-nowrap shrink-0"
             >
-              Let's talk
+              {t.navContact}
             </a>
           </nav>
 
-          {/* Zone 3: Primary Action */}
+          {/* Zone 3: Language Switcher Button & Mobile Menu Trigger */}
           <div className="flex items-center gap-3 shrink-0">
-            <a
-              href="#contact"
-              className="hidden sm:inline-flex items-center justify-center px-4 py-2 text-xs font-semibold tracking-wide text-[#0A0A0A] bg-[#F5F5F5] rounded hover:bg-white transition-colors duration-150 whitespace-nowrap shrink-0"
+            <button
+              type="button"
+              onClick={handleToggleLanguage}
+              aria-label="Switch Language"
+              className="inline-flex items-center justify-center px-3.5 py-1.5 text-xs font-semibold text-[#F5F5F5] bg-[#121212] border border-[#1F1F1F] rounded hover:border-[#888888] transition-colors duration-150 whitespace-nowrap shrink-0 cursor-pointer"
             >
-              Let's talk
-            </a>
+              {t.switchLangLabel}
+            </button>
+
             <button
               type="button"
               onClick={() => setMobileMenuOpen((prev) => !prev)}
@@ -331,28 +613,28 @@ export default function App() {
               onClick={() => setMobileMenuOpen(false)}
               className="block py-1.5 text-sm font-medium text-[#888888] hover:text-[#F5F5F5] transition-colors"
             >
-              About
+              {t.navAbout}
             </a>
             <a
               href="#academy"
               onClick={() => setMobileMenuOpen(false)}
               className="block py-1.5 text-sm font-medium text-[#888888] hover:text-[#F5F5F5] transition-colors"
             >
-              Academy
+              {t.navAcademy}
             </a>
             <a
               href="#student-work"
               onClick={() => setMobileMenuOpen(false)}
               className="block py-1.5 text-sm font-medium text-[#888888] hover:text-[#F5F5F5] transition-colors"
             >
-              Student work
+              {t.navStudentWork}
             </a>
             <a
               href="#contact"
               onClick={() => setMobileMenuOpen(false)}
               className="block py-1.5 text-sm font-medium text-[#F5F5F5] transition-colors"
             >
-              Let's talk
+              {t.navContact}
             </a>
           </div>
         )}
@@ -363,15 +645,19 @@ export default function App() {
         <section className="pt-16 md:pt-24 pb-20 md:pb-28 border-b border-[#1F1F1F]">
           <div className="max-w-[1200px] mx-auto px-6 md:px-10">
             {/* Micro-label */}
-            <p className="font-mono-tabular text-xs tracking-[0.18em] text-[#888888] mb-6">
-              ARCHITECTURAL ENGINEER &amp; EDUCATOR
+            <p
+              className={`font-mono-tabular text-xs ${
+                isRtl ? 'tracking-normal' : 'tracking-[0.18em]'
+              } text-[#888888] mb-6`}
+            >
+              {t.heroLabel}
             </p>
 
             {/* Identity Row: 96px x 96px Circular Profile Image + Huge Bold Heading */}
             <div className="flex flex-col sm:flex-row sm:items-center gap-6 md:gap-8 mb-12 md:mb-16">
               <div className="relative w-24 h-24 rounded-full overflow-hidden border border-[#1F1F1F] bg-[#121212] shrink-0">
                 <img
-                  src="./profile.jpg"
+                  src={customImages.profile || './profile.jpg'}
                   alt="Arch. Ibrahim Al-Najjar"
                   referrerPolicy="no-referrer"
                   className="w-24 h-24 rounded-full object-cover"
@@ -383,25 +669,21 @@ export default function App() {
                   }}
                 />
               </div>
-              <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-[4.25rem] font-bold tracking-tight text-[#F5F5F5] leading-[1.06] headline-balance">
-                Arch. Ibrahim Al-Najjar
+              <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-[4.25rem] font-bold tracking-tight text-[#F5F5F5] leading-[1.08] headline-balance">
+                {t.heroName}
               </h1>
             </div>
 
             {/* Editorial Split Row Below */}
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 pt-8 border-t border-[#1F1F1F] mb-12 md:mb-16 items-start">
               <div className="lg:col-span-5">
-                <h2 className="text-xl sm:text-2xl md:text-[1.75rem] font-semibold tracking-tight text-[#F5F5F5] leading-[1.25] headline-balance">
-                  Thoughtful architecture. Knowledge worth sharing.
+                <h2 className="text-xl sm:text-2xl md:text-[1.75rem] font-semibold tracking-tight text-[#F5F5F5] leading-[1.3] headline-balance">
+                  {t.heroMotto}
                 </h2>
               </div>
               <div className="lg:col-span-7">
                 <p className="text-base md:text-[1.0625rem] text-[#888888] leading-[1.75] max-w-[68ch]">
-                  Architectural engineer and instructor with professional
-                  experience since 2023, having successfully trained over 600+
-                  students worldwide. Specializing in transforming complex
-                  architectural concepts into high-end visual masterpieces using
-                  Revit, AutoCAD, Enscape, Lumion, Photoshop, and V-Ray.
+                  {t.heroBio}
                 </p>
               </div>
             </div>
@@ -409,7 +691,7 @@ export default function App() {
             {/* Hero Image Showcase: Full-width architectural render (aspect-video, object-cover) */}
             <div className="relative w-full aspect-video rounded-xl overflow-hidden border border-[#1F1F1F] bg-[#121212] group">
               <img
-                src="./hero-render.jpg"
+                src={customImages.hero || './hero-render.jpg'}
                 alt="Twilight Architectural Render"
                 referrerPolicy="no-referrer"
                 className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.015]"
@@ -423,8 +705,12 @@ export default function App() {
               <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/20 to-transparent pointer-events-none" />
               {/* Floating Dark Badge in Bottom-Left Corner */}
               <div className="absolute bottom-4 left-4 sm:bottom-6 sm:left-6 bg-[#0A0A0A]/90 backdrop-blur-md border border-[#1F1F1F] px-3.5 py-2 rounded">
-                <span className="font-mono-tabular text-[11px] sm:text-xs tracking-[0.16em] text-[#F5F5F5]">
-                  FORM / LIGHT / ATMOSPHERE
+                <span
+                  className={`font-mono-tabular text-[11px] sm:text-xs ${
+                    isRtl ? 'tracking-normal' : 'tracking-[0.16em]'
+                  } text-[#F5F5F5]`}
+                >
+                  {t.heroBadge}
                 </span>
               </div>
             </div>
@@ -439,26 +725,20 @@ export default function App() {
           <div className="max-w-[1200px] mx-auto px-6 md:px-10">
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 mb-16">
               <div className="lg:col-span-4">
-                <p className="font-mono-tabular text-xs tracking-[0.16em] text-[#888888]">
-                  01 / THE PRACTICE
+                <p
+                  className={`font-mono-tabular text-xs ${
+                    isRtl ? 'tracking-normal' : 'tracking-[0.16em]'
+                  } text-[#888888]`}
+                >
+                  {t.practiceLabel}
                 </p>
               </div>
               <div className="lg:col-span-8">
-                <h2 className="text-3xl sm:text-4xl md:text-[2.5rem] font-bold tracking-tight text-[#F5F5F5] leading-[1.15] mb-6 headline-balance">
-                  Good design begins with understanding.
+                <h2 className="text-3xl sm:text-4xl md:text-[2.5rem] font-bold tracking-tight text-[#F5F5F5] leading-[1.18] mb-6 headline-balance">
+                  {t.practiceHeading}
                 </h2>
                 <p className="text-base md:text-[1.0625rem] text-[#888888] leading-[1.75] max-w-[70ch]">
-                  I'm Arch. Ibrahim Al-Najjar, an architectural engineer and
-                  dedicated educator. My journey in professional architectural
-                  training started in 2023, and since then, I’ve had the
-                  privilege of teaching and empowering over 600+ students and
-                  engineers worldwide. My approach bridges the gap between
-                  creative architectural design and precise technical execution.
-                  I specialize in mastering and teaching the industry's most
-                  powerful software stack: Revit, AutoCAD, Enscape, Lumion,
-                  Photoshop, and V-Ray. My mission is to help aspiring
-                  architects transform complex concepts into stunning, realistic
-                  visual stories.
+                  {t.practiceNarrative}
                 </p>
               </div>
             </div>
@@ -471,11 +751,9 @@ export default function App() {
                 </span>
                 <div>
                   <div className="text-3xl md:text-4xl font-bold tracking-tight text-[#F5F5F5] font-mono-tabular mb-2">
-                    Since 2023
+                    {t.stat1Value}
                   </div>
-                  <p className="text-sm text-[#888888]">
-                    Professional Experience &amp; Instruction
-                  </p>
+                  <p className="text-sm text-[#888888]">{t.stat1Desc}</p>
                 </div>
               </div>
 
@@ -485,11 +763,9 @@ export default function App() {
                 </span>
                 <div>
                   <div className="text-3xl md:text-4xl font-bold tracking-tight text-[#F5F5F5] font-mono-tabular mb-2">
-                    600+
+                    {t.stat2Value}
                   </div>
-                  <p className="text-sm text-[#888888]">
-                    Students Trained Worldwide
-                  </p>
+                  <p className="text-sm text-[#888888]">{t.stat2Desc}</p>
                 </div>
               </div>
 
@@ -499,19 +775,21 @@ export default function App() {
                 </span>
                 <div>
                   <div className="text-3xl md:text-4xl font-bold tracking-tight text-[#F5F5F5] font-mono-tabular mb-2">
-                    6 Core Tools
+                    {t.stat3Value}
                   </div>
-                  <p className="text-sm text-[#888888]">
-                    Complete BIM &amp; Rendering Ecosystem
-                  </p>
+                  <p className="text-sm text-[#888888]">{t.stat3Desc}</p>
                 </div>
               </div>
             </div>
 
             {/* Software Stack Bar */}
             <div className="bg-[#121212] border border-[#1F1F1F] rounded-xl p-6 md:px-8 md:py-6 flex flex-col md:flex-row md:items-center justify-between gap-6">
-              <div className="text-xs font-mono-tabular tracking-[0.14em] text-[#888888] shrink-0">
-                CORE SOFTWARE ECOSYSTEM
+              <div
+                className={`text-xs font-mono-tabular ${
+                  isRtl ? 'tracking-normal' : 'tracking-[0.14em]'
+                } text-[#888888] shrink-0`}
+              >
+                {t.softwareEcosystemLabel}
               </div>
               <div className="flex flex-wrap items-center gap-2.5">
                 {SOFTWARE_STACK.map((tool) => (
@@ -535,13 +813,17 @@ export default function App() {
           <div className="max-w-[1200px] mx-auto px-6 md:px-10">
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 mb-14">
               <div className="lg:col-span-4">
-                <p className="font-mono-tabular text-xs tracking-[0.16em] text-[#888888]">
-                  02 / THE ACADEMY
+                <p
+                  className={`font-mono-tabular text-xs ${
+                    isRtl ? 'tracking-normal' : 'tracking-[0.16em]'
+                  } text-[#888888]`}
+                >
+                  {t.academyLabel}
                 </p>
               </div>
               <div className="lg:col-span-8">
-                <h2 className="text-3xl sm:text-4xl md:text-[2.5rem] font-bold tracking-tight text-[#F5F5F5] leading-[1.15] headline-balance">
-                  Build precision. Render emotion.
+                <h2 className="text-3xl sm:text-4xl md:text-[2.5rem] font-bold tracking-tight text-[#F5F5F5] leading-[1.18] headline-balance">
+                  {t.academyHeading}
                 </h2>
               </div>
             </div>
@@ -552,16 +834,18 @@ export default function App() {
                 {/* Left Column: Course Overview & Direct WhatsApp CTA */}
                 <div className="lg:col-span-5 flex flex-col justify-between h-full">
                   <div>
-                    <p className="font-mono-tabular text-xs tracking-[0.14em] text-[#888888] mb-3">
-                      FLAGSHIP ONLINE COURSE
+                    <p
+                      className={`font-mono-tabular text-xs ${
+                        isRtl ? 'tracking-normal' : 'tracking-[0.14em]'
+                      } text-[#888888] mb-3`}
+                    >
+                      {t.flagshipTag}
                     </p>
                     <h3 className="text-2xl sm:text-3xl font-bold tracking-tight text-[#F5F5F5] mb-4">
-                      Revit Masterclass
+                      {t.flagshipTitle}
                     </h3>
                     <p className="text-sm sm:text-base text-[#888888] leading-[1.7] mb-8">
-                      Complete architectural BIM mastery from initial concept
-                      and precision 3D modeling to full technical working
-                      drawings and rendering export.
+                      {t.flagshipOverview}
                     </p>
                   </div>
 
@@ -570,18 +854,26 @@ export default function App() {
                       href="https://wa.me/963998401013?text=Hello%20Arch.%20Ibrahim,%20I%20would%20like%20to%20enroll%20in%20the%20Revit%20Masterclass."
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex items-center justify-center w-full sm:w-auto px-6 py-3.5 text-sm font-semibold text-[#0A0A0A] bg-[#F5F5F5] rounded hover:bg-white transition-colors duration-150 whitespace-nowrap"
+                      className="inline-flex items-center justify-center gap-2 w-full sm:w-auto px-6 py-3.5 text-sm font-semibold text-[#0A0A0A] bg-[#F5F5F5] rounded hover:bg-white transition-colors duration-150 whitespace-nowrap"
                     >
-                      <span>Enroll in Revit Masterclass</span>
-                      <ArrowUpRight className="w-4 h-4 ml-2" />
+                      <span>{t.flagshipCta}</span>
+                      {isRtl ? (
+                        <ArrowUpLeft className="w-4 h-4 shrink-0" />
+                      ) : (
+                        <ArrowUpRight className="w-4 h-4 shrink-0" />
+                      )}
                     </a>
                   </div>
                 </div>
 
                 {/* Right Column: Interactive Curriculum Accordion (4 Modules) */}
                 <div className="lg:col-span-7">
-                  <div className="text-xs font-mono-tabular tracking-[0.14em] text-[#888888] mb-4">
-                    CURRICULUM SYLLABUS · 4 MODULES
+                  <div
+                    className={`text-xs font-mono-tabular ${
+                      isRtl ? 'tracking-normal' : 'tracking-[0.14em]'
+                    } text-[#888888] mb-4`}
+                  >
+                    {t.syllabusLabel}
                   </div>
 
                   <div className="divide-y divide-[#1F1F1F] border-t border-b border-[#1F1F1F]">
@@ -593,10 +885,10 @@ export default function App() {
                             type="button"
                             onClick={() => handleToggleModule(mod.id)}
                             aria-expanded={isOpen}
-                            className="w-full py-4 flex items-center justify-between gap-4 text-left group focus:outline-none"
+                            className="w-full py-4 flex items-center justify-between gap-4 text-start group focus:outline-none cursor-pointer"
                           >
                             <span className="text-sm sm:text-base font-semibold text-[#F5F5F5] group-hover:text-white transition-colors">
-                              {mod.title}
+                              {mod.title[lang]}
                             </span>
                             <span
                               className={`w-6 h-6 flex items-center justify-center rounded border border-[#1F1F1F] text-[#888888] group-hover:text-[#F5F5F5] shrink-0 transition-transform duration-200 ${
@@ -608,7 +900,7 @@ export default function App() {
                           </button>
                           {isOpen && (
                             <div className="pb-4 text-sm text-[#888888] leading-relaxed">
-                              {mod.description}
+                              {mod.description[lang]}
                             </div>
                           )}
                         </div>
@@ -625,19 +917,18 @@ export default function App() {
               <div className="bg-[#121212] border border-[#1F1F1F] rounded-xl p-7 md:p-8 flex flex-col justify-between">
                 <div>
                   <p className="font-mono-tabular text-xs text-[#888888] mb-3">
-                    SPECIALIZED TRACK · LUMION / ENSCAPE / V-RAY
+                    {t.course1Tag}
                   </p>
                   <h3 className="text-xl sm:text-2xl font-bold tracking-tight text-[#F5F5F5] mb-3">
-                    Architectural Visualization Bootcamp
+                    {t.course1Title}
                   </h3>
                   <p className="text-sm sm:text-base text-[#888888] leading-[1.7] mb-6">
-                    Mastering twilight lighting, realistic materials, and
-                    cinematic atmosphere using Lumion, Enscape, and V-Ray.
+                    {t.course1Desc}
                   </p>
                 </div>
                 <div className="pt-4 border-t border-[#1F1F1F] flex items-center justify-between gap-4">
                   <span className="text-xs font-mono-tabular text-[#888888]">
-                    Lighting · Materials · Atmosphere
+                    {t.course1Meta}
                   </span>
                   <a
                     href="https://wa.me/963998401013?text=Hello%20Arch.%20Ibrahim,%20I%20am%20interested%20in%20the%20Architectural%20Visualization%20Bootcamp."
@@ -645,7 +936,7 @@ export default function App() {
                     rel="noopener noreferrer"
                     className="text-xs font-semibold text-[#F5F5F5] hover:underline whitespace-nowrap"
                   >
-                    Inquire via WhatsApp →
+                    {t.inquireWhatsapp}
                   </a>
                 </div>
               </div>
@@ -654,19 +945,18 @@ export default function App() {
               <div className="bg-[#121212] border border-[#1F1F1F] rounded-xl p-7 md:p-8 flex flex-col justify-between">
                 <div>
                   <p className="font-mono-tabular text-xs text-[#888888] mb-3">
-                    SPECIALIZED TRACK · AUTOCAD / PHOTOSHOP
+                    {t.course2Tag}
                   </p>
                   <h3 className="text-xl sm:text-2xl font-bold tracking-tight text-[#F5F5F5] mb-3">
-                    Technical Drafting &amp; Post-Production
+                    {t.course2Title}
                   </h3>
                   <p className="text-sm sm:text-base text-[#888888] leading-[1.7] mb-6">
-                    Precision 2D CAD documentation and studio-grade
-                    architectural post-processing in Adobe Photoshop.
+                    {t.course2Desc}
                   </p>
                 </div>
                 <div className="pt-4 border-t border-[#1F1F1F] flex items-center justify-between gap-4">
                   <span className="text-xs font-mono-tabular text-[#888888]">
-                    2D Execution · Post-Processing
+                    {t.course2Meta}
                   </span>
                   <a
                     href="https://wa.me/963998401013?text=Hello%20Arch.%20Ibrahim,%20I%20am%20interested%20in%20Technical%20Drafting%20%26%20Post-Production."
@@ -674,7 +964,7 @@ export default function App() {
                     rel="noopener noreferrer"
                     className="text-xs font-semibold text-[#F5F5F5] hover:underline whitespace-nowrap"
                   >
-                    Inquire via WhatsApp →
+                    {t.inquireWhatsapp}
                   </a>
                 </div>
               </div>
@@ -690,13 +980,17 @@ export default function App() {
           <div className="max-w-[1200px] mx-auto px-6 md:px-10">
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 mb-14">
               <div className="lg:col-span-4">
-                <p className="font-mono-tabular text-xs tracking-[0.16em] text-[#888888]">
-                  03 / STUDENT WORK
+                <p
+                  className={`font-mono-tabular text-xs ${
+                    isRtl ? 'tracking-normal' : 'tracking-[0.16em]'
+                  } text-[#888888]`}
+                >
+                  {t.studentWorkLabel}
                 </p>
               </div>
               <div className="lg:col-span-8">
-                <h2 className="text-3xl sm:text-4xl md:text-[2.5rem] font-bold tracking-tight text-[#F5F5F5] leading-[1.15] headline-balance">
-                  Selected works by our 600+ students.
+                <h2 className="text-3xl sm:text-4xl md:text-[2.5rem] font-bold tracking-tight text-[#F5F5F5] leading-[1.18] headline-balance">
+                  {t.studentWorkHeading}
                 </h2>
               </div>
             </div>
@@ -711,13 +1005,13 @@ export default function App() {
                 >
                   <div className="relative aspect-[4/3] w-full overflow-hidden bg-[#0A0A0A]">
                     <img
-                      src={work.src}
+                      src={customImages[work.slotKey] || work.src}
                       alt={work.alt}
                       referrerPolicy="no-referrer"
                       className="w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-105"
                       onError={(e) => {
                         const target = e.currentTarget;
-                        const fallback = FALLBACK_SVGS[work.fallbackKey];
+                        const fallback = FALLBACK_SVGS[work.slotKey];
                         if (target.src !== fallback) {
                           target.src = fallback;
                         }
@@ -731,10 +1025,10 @@ export default function App() {
                   <div className="p-5 flex items-center justify-between gap-4">
                     <div>
                       <h3 className="text-base font-semibold text-[#F5F5F5] group-hover:text-white transition-colors">
-                        {work.title}
+                        {work.title[lang]}
                       </h3>
                       <p className="text-xs text-[#888888] mt-1">
-                        {work.subtitle}
+                        {work.subtitle[lang]}
                       </p>
                     </div>
                     <span className="font-mono-tabular text-xs text-[#888888]">
@@ -751,11 +1045,15 @@ export default function App() {
         <section id="contact" className="py-20 md:py-28 scroll-mt-16">
           <div className="max-w-[1200px] mx-auto px-6 md:px-10">
             <div className="bg-[#121212] border border-[#1F1F1F] rounded-xl p-8 sm:p-10 md:p-14">
-              <p className="font-mono-tabular text-xs tracking-[0.16em] text-[#888888] mb-4">
-                04 / LET'S TALK
+              <p
+                className={`font-mono-tabular text-xs ${
+                  isRtl ? 'tracking-normal' : 'tracking-[0.16em]'
+                } text-[#888888] mb-4`}
+              >
+                {t.contactLabel}
               </p>
-              <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight text-[#F5F5F5] leading-[1.12] max-w-2xl mb-10 headline-balance">
-                Ready to elevate your architectural workflow?
+              <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight text-[#F5F5F5] leading-[1.16] max-w-2xl mb-10 headline-balance">
+                {t.contactHeading}
               </h2>
 
               {/* Direct Contact Buttons */}
@@ -766,8 +1064,11 @@ export default function App() {
                   rel="noopener noreferrer"
                   className="inline-flex items-center justify-between sm:justify-center gap-3 px-6 py-4 text-sm font-semibold text-[#0A0A0A] bg-[#F5F5F5] rounded hover:bg-white transition-colors duration-150 whitespace-nowrap"
                 >
-                  <span>WhatsApp</span>
-                  <span className="font-mono-tabular text-xs text-[#0A0A0A]/80">
+                  <span>{t.whatsappBtnLabel}</span>
+                  <span
+                    dir="ltr"
+                    className="font-mono-tabular text-xs text-[#0A0A0A]/80"
+                  >
                     +963 998 401 013
                   </span>
                 </a>
@@ -776,8 +1077,13 @@ export default function App() {
                   href="mailto:arch.ibrahim.najjar@gmail.com"
                   className="inline-flex items-center justify-between sm:justify-center gap-3 px-6 py-4 text-sm font-semibold text-[#F5F5F5] bg-[#0A0A0A] border border-[#1F1F1F] rounded hover:border-[#888888] transition-colors duration-150 whitespace-nowrap"
                 >
-                  <span className="text-[#888888] font-normal">Email</span>
-                  <span className="font-mono-tabular text-xs sm:text-sm text-[#F5F5F5]">
+                  <span className="text-[#888888] font-normal">
+                    {t.emailBtnLabel}
+                  </span>
+                  <span
+                    dir="ltr"
+                    className="font-mono-tabular text-xs sm:text-sm text-[#F5F5F5]"
+                  >
                     arch.ibrahim.najjar@gmail.com
                   </span>
                 </a>
@@ -790,15 +1096,23 @@ export default function App() {
       {/* MINIMALIST FOOTER */}
       <footer className="border-t border-[#1F1F1F] py-8">
         <div className="max-w-[1200px] mx-auto px-6 md:px-10 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-[#888888]">
-          <p>© 2026 Arch. Ibrahim Al-Najjar. All rights reserved.</p>
-          <div className="flex items-center gap-6">
+          <p>{t.footerCopy}</p>
+          <div className="flex flex-wrap items-center gap-5">
+            <button
+              type="button"
+              onClick={() => setImageManagerOpen(true)}
+              className="inline-flex items-center gap-1.5 font-mono-tabular text-xs text-[#F5F5F5] hover:underline transition-colors cursor-pointer"
+            >
+              <ImagePlus className="w-3.5 h-3.5" />
+              <span>{t.manageImagesBtn}</span>
+            </button>
             <button
               type="button"
               onClick={() => setCodeDrawerOpen(true)}
-              className="inline-flex items-center gap-1.5 font-mono-tabular text-xs text-[#888888] hover:text-[#F5F5F5] transition-colors"
+              className="inline-flex items-center gap-1.5 font-mono-tabular text-xs text-[#888888] hover:text-[#F5F5F5] transition-colors cursor-pointer"
             >
               <Code2 className="w-3.5 h-3.5" />
-              <span>Export Single-File index.html</span>
+              <span>{t.exportBtn}</span>
             </button>
           </div>
         </div>
@@ -820,7 +1134,7 @@ export default function App() {
                   {activeLightbox.index}
                 </span>
                 <h3 className="text-lg font-semibold text-[#F5F5F5]">
-                  {activeLightbox.title}
+                  {activeLightbox.title[lang]}
                 </h3>
               </div>
               <button
@@ -834,13 +1148,15 @@ export default function App() {
             </div>
             <div className="aspect-video w-full bg-[#0A0A0A] overflow-hidden">
               <img
-                src={activeLightbox.src}
+                src={
+                  customImages[activeLightbox.slotKey] || activeLightbox.src
+                }
                 alt={activeLightbox.alt}
                 referrerPolicy="no-referrer"
                 className="w-full h-full object-cover"
                 onError={(e) => {
                   const target = e.currentTarget;
-                  const fallback = FALLBACK_SVGS[activeLightbox.fallbackKey];
+                  const fallback = FALLBACK_SVGS[activeLightbox.slotKey];
                   if (target.src !== fallback) {
                     target.src = fallback;
                   }
@@ -848,10 +1164,118 @@ export default function App() {
               />
             </div>
             <div className="px-6 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs text-[#888888] border-t border-[#1F1F1F]">
-              <span>{activeLightbox.subtitle}</span>
+              <span>{activeLightbox.subtitle[lang]}</span>
               <span className="font-mono-tabular">
-                Workflow: {activeLightbox.stack} · {activeLightbox.year}
+                {t.workflowLabel}: {activeLightbox.stack} ·{' '}
+                {activeLightbox.year}
               </span>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* SITE PHOTO UPLOADER MODAL */}
+      {imageManagerOpen && (
+        <div
+          className="fixed inset-0 z-50 bg-black/85 backdrop-blur-sm flex items-center justify-center p-4 sm:p-6"
+          onClick={() => setImageManagerOpen(false)}
+        >
+          <div
+            className="max-w-2xl w-full bg-[#121212] border border-[#1F1F1F] rounded-xl overflow-hidden flex flex-col max-h-[88vh]"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="px-6 py-4 border-b border-[#1F1F1F] flex items-center justify-between gap-4">
+              <div>
+                <h3 className="text-base font-semibold text-[#F5F5F5]">
+                  {isRtl
+                    ? 'إدارة ورفع صور الموقع مباشرة'
+                    : 'Upload & Preview Site Photos'}
+                </h3>
+                <p className="text-xs text-[#888888] mt-0.5">
+                  {isRtl
+                    ? 'اختر صورك من جهازك لمعاينتها فوراً وتضمينها داخل ملف index.html'
+                    : 'Select images from your device to preview live and embed in index.html'}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setImageManagerOpen(false)}
+                aria-label="Close"
+                className="p-1.5 text-[#888888] hover:text-[#F5F5F5]"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="p-6 overflow-y-auto space-y-4">
+              {IMAGE_SLOTS_META.map((slot) => {
+                const hasCustom = Boolean(customImages[slot.key]);
+                return (
+                  <div
+                    key={slot.key}
+                    className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 rounded-lg bg-[#0A0A0A] border border-[#1F1F1F]"
+                  >
+                    <div className="flex items-center gap-4">
+                      <img
+                        src={customImages[slot.key] || FALLBACK_SVGS[slot.key]}
+                        alt={slot.labelEn}
+                        className="w-14 h-14 rounded object-cover border border-[#1F1F1F] shrink-0"
+                      />
+                      <div>
+                        <div className="text-sm font-semibold text-[#F5F5F5]">
+                          {isRtl ? slot.labelAr : slot.labelEn}
+                        </div>
+                        <div
+                          dir="ltr"
+                          className="text-xs font-mono-tabular text-[#888888]"
+                        >
+                          {slot.fileName}{' '}
+                          {hasCustom ? '· ✓ Custom Uploaded' : '· Default Path'}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-2 shrink-0">
+                      <label className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold text-[#0A0A0A] bg-[#F5F5F5] rounded hover:bg-white transition-colors cursor-pointer">
+                        <Upload className="w-3.5 h-3.5" />
+                        <span>{isRtl ? 'اختر صورة' : 'Choose Image'}</span>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          onChange={(e) => handleUploadSlot(slot.key, e)}
+                        />
+                      </label>
+                      {hasCustom && (
+                        <button
+                          type="button"
+                          onClick={() => handleResetSlot(slot.key)}
+                          title={isRtl ? 'إعادة ضبط' : 'Reset'}
+                          className="p-2 text-[#888888] hover:text-[#F5F5F5] border border-[#1F1F1F] rounded"
+                        >
+                          <RotateCcw className="w-3.5 h-3.5" />
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            <div className="px-6 py-4 border-t border-[#1F1F1F] flex items-center justify-between gap-4 bg-[#0A0A0A]">
+              <span className="text-xs text-[#888888]">
+                {isRtl
+                  ? 'بعد رفع الصور يمكنك تحميل ملف index.html جاهزاً بالكامل'
+                  : 'After uploading, download the ready-to-publish index.html'}
+              </span>
+              <button
+                type="button"
+                onClick={handleDownloadHtml}
+                className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-[#0A0A0A] bg-[#F5F5F5] rounded hover:bg-white transition-colors cursor-pointer"
+              >
+                <Download className="w-3.5 h-3.5" />
+                <span>{isRtl ? 'تحميل index.html' : 'Download index.html'}</span>
+              </button>
             </div>
           </div>
         </div>
@@ -864,6 +1288,7 @@ export default function App() {
           onClick={() => setCodeDrawerOpen(false)}
         >
           <div
+            dir="ltr"
             className="max-w-4xl w-full bg-[#121212] border border-[#1F1F1F] rounded-xl overflow-hidden flex flex-col max-h-[85vh]"
             onClick={(e) => e.stopPropagation()}
           >
@@ -873,14 +1298,14 @@ export default function App() {
                   GitHub Pages Single-File Export (index.html)
                 </h3>
                 <p className="text-xs text-[#888888]">
-                  Place alongside ./profile.jpg, ./hero-render.jpg, ./work-1.jpg, ./work-2.jpg, and ./work-3.jpg
+                  Includes bilingual Arabic/English toggle &amp; relative image paths (./profile.jpg, ./hero-render.jpg, ./work-1..3.jpg)
                 </p>
               </div>
               <div className="flex items-center gap-2.5">
                 <button
                   type="button"
                   onClick={handleCopyCode}
-                  className="inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold text-[#F5F5F5] bg-[#0A0A0A] border border-[#1F1F1F] rounded hover:border-[#888888] transition-colors"
+                  className="inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold text-[#F5F5F5] bg-[#0A0A0A] border border-[#1F1F1F] rounded hover:border-[#888888] transition-colors cursor-pointer"
                 >
                   {copied ? (
                     <>
@@ -897,7 +1322,7 @@ export default function App() {
                 <button
                   type="button"
                   onClick={handleDownloadHtml}
-                  className="inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold text-[#0A0A0A] bg-[#F5F5F5] rounded hover:bg-white transition-colors"
+                  className="inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold text-[#0A0A0A] bg-[#F5F5F5] rounded hover:bg-white transition-colors cursor-pointer"
                 >
                   <Download className="w-3.5 h-3.5" />
                   <span>Download index.html</span>
@@ -913,7 +1338,7 @@ export default function App() {
               </div>
             </div>
             <pre className="p-6 text-xs font-mono-tabular text-[#888888] overflow-auto leading-relaxed select-all bg-[#0A0A0A]">
-              <code>{STANDALONE_HTML}</code>
+              <code>{getExportHtml()}</code>
             </pre>
           </div>
         </div>
